@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Zauzece;
 
 namespace Client
 {
@@ -45,6 +46,27 @@ namespace Client
                         int bytesReceived = tcpSocket.Receive(tcpBuffer);
                         string parkingInfo = Encoding.UTF8.GetString(tcpBuffer, 0, bytesReceived);
                         Console.WriteLine(parkingInfo);
+
+                        Console.WriteLine("Unesite broj parkinga za koji želite da zauzmete mesto: ");
+                        int brojParkinga = int.Parse(Console.ReadLine());
+
+                        Console.WriteLine("Unesite broj mesta koja želite da zauzmete: ");
+                        int brojMjesta = int.Parse(Console.ReadLine());
+
+                        Console.WriteLine("Unesite broj sati za koje želite da zauzmete mesto: ");
+                        int brojSati = int.Parse(Console.ReadLine());
+
+                        Class1 zauzece = new Class1(brojParkinga, brojMjesta, brojSati);
+
+
+                        byte[] zauzeceBytes = zauzece.ToByteArray();
+                        tcpSocket.Send(zauzeceBytes);
+
+                        // Čekanje odgovora od servera (jedinstveni ID zahteva)
+                        byte[] odgovorZauzece = new byte[BUFFER_SIZE];
+                        int bytesReceivedZauzece = tcpSocket.Receive(odgovorZauzece);
+                        string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
+                        Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
                     }
                     catch (SocketException ex)
                     {
