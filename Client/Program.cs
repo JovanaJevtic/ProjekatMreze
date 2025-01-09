@@ -48,25 +48,64 @@ namespace Client
                         Console.WriteLine(parkingInfo);
 
                         Console.WriteLine("Unesite broj parkinga za koji želite da zauzmete mesto: ");
-                        int brojParkinga = int.Parse(Console.ReadLine());
+                        // int brojParkinga = int.Parse(Console.ReadLine());
+                        int brojParkinga;
+                        bool isValid = int.TryParse(Console.ReadLine(), out brojParkinga);
+                        if (!isValid) 
+                        { 
+                            Console.WriteLine("Unos nije validan broj parkinga!"); 
+                            return;
+                        }
 
                         Console.WriteLine("Unesite broj mesta koja želite da zauzmete: ");
-                        int brojMjesta = int.Parse(Console.ReadLine());
+                        // int brojMjesta = int.Parse(Console.ReadLine());
+                        int brojMjesta;
+                        isValid = int.TryParse(Console.ReadLine(), out brojMjesta);
+                        if (!isValid) 
+                        {
+                            Console.WriteLine("Unos nije validan broj mesta!"); 
+                            return; 
+                        }
 
                         Console.WriteLine("Unesite broj sati za koje želite da zauzmete mesto: ");
-                        int brojSati = int.Parse(Console.ReadLine());
+                        // int brojSati = int.Parse(Console.ReadLine());
+                        int brojSati;
+                        isValid = int.TryParse(Console.ReadLine(), out brojSati);
+                         if (!isValid)
+                            { 
+                            Console.WriteLine("Unos nije validan broj sati!");
+                            return; 
+                             }
 
                         Class1 zauzece = new Class1(brojParkinga, brojMjesta, brojSati);
-
-
                         byte[] zauzeceBytes = zauzece.ToByteArray();
                         tcpSocket.Send(zauzeceBytes);
 
-                        // Čekanje odgovora od servera (jedinstveni ID zahteva)
                         byte[] odgovorZauzece = new byte[BUFFER_SIZE];
                         int bytesReceivedZauzece = tcpSocket.Receive(odgovorZauzece);
                         string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
                         Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
+
+                        if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mesta"))
+                        {
+                            Console.WriteLine("Nema dovoljno slobodnih mesta za zauzimanje.");
+                            return;  
+                        }
+
+                        Console.WriteLine("Ako želite da oslobodite parking, unesite ID zahtjeva.\n");
+                        Console.WriteLine("Unesite ID zahtjeva za oslobodjenje parkinga: ");
+                        string oslobađanje = Console.ReadLine();
+                        string oslobađanjePoruka = $"Oslobađam: {oslobađanje}";
+                        byte[] oslobađanjeBajti = Encoding.UTF8.GetBytes(oslobađanjePoruka);
+                        tcpSocket.Send(oslobađanjeBajti);
+
+                     /*   byte[] odgovorOslobađanje = new byte[BUFFER_SIZE];
+                        int bytesReceivedOslobađanje = tcpSocket.Receive(odgovorOslobađanje);
+                        string odgovorOslobađanjePoruka = Encoding.UTF8.GetString(odgovorOslobađanje, 0, bytesReceivedOslobađanje);
+                        Console.WriteLine($"Server je poslao odgovor: {odgovorOslobađanjePoruka}");
+                     */
+                        Console.WriteLine("\nMjesta su oslobodjena!");
+                        
                     }
                     catch (SocketException ex)
                     {
@@ -77,6 +116,11 @@ namespace Client
                         tcpSocket.Close();
                         Console.WriteLine("TCP veza zatvorena.");
                     }
+                }
+                else
+                {
+                    Console.WriteLine("Neuspešna prijava na parking. Pokušajte ponovo.");
+                    return;
                 }
             }
             catch (SocketException ex)
