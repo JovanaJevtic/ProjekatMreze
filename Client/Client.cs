@@ -21,12 +21,18 @@ namespace Client
             Console.WriteLine("Klijent je pokrenut. Za prijavu unesite 'prijava', ili 'izlaz' za zatvaranje klijenta.");
             Console.WriteLine("Nakon sto ste zauzeli parking, unesite 'oslobadjam: (broj zahteva)', da biste oslobodili parking mesta. ");
 
-
             while (true)
             {
                 Console.Write("\n\tUnesite komandu: ");
                 string poruka = Console.ReadLine()?.Trim();
                 byte[] binarnaPoruka = Encoding.UTF8.GetBytes(poruka);
+
+                if (poruka?.ToLower() == "izlaz")
+                {
+                    Console.WriteLine("Klijent završava sa radom.");
+                    udpSocket.Close();
+                    break;
+                }
 
                 try
                 {
@@ -38,6 +44,13 @@ namespace Client
                     string odgovorPoruka = Encoding.UTF8.GetString(odgovor, 0, brPrijemnihBajta);
 
                     Console.WriteLine($"\nServer je poslao odgovor: {odgovorPoruka}");
+
+                    // Provera za neodgovarajuću poruku
+                    if (odgovorPoruka.Contains("Poruka nije odgovarajuća"))
+                    {
+                        Console.WriteLine("Server: Poruka nije odgovarajuća. Molimo vas unesite ponovo. ");
+                        continue; // Nastavlja petlju za novi unos
+                    }
 
                     if (odgovorPoruka.Contains("Klijent se uspiješno prijavio!"))
                     {
@@ -111,11 +124,22 @@ namespace Client
                                 return;
                             }
                         }
-                        catch (SocketException ex)
+                        catch (Exception ex)
                         {
-                            Console.WriteLine($"Greška prilikom slanja UDP poruke: {ex.Message}");
+                            Console.WriteLine($"Greška: {ex.Message}");
                         }
                     }
+
+                    else if (odgovorPoruka.Contains("Zahtjev prihvaćen"))
+                    {
+                        Console.WriteLine("Parking mesto je uspešno oslobodjeno!");
+                    }
+
+                    else if (poruka.ToLower().StartsWith("oslobadjam:"))
+                    {
+                       // Console.WriteLine("Oslobadjate parking mesto...");
+                    }
+
                     else
                     {
                         Console.WriteLine("Neuspešna prijava na parking. Pokušajte ponovo.");
