@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using Zauzece;
 
@@ -15,7 +16,6 @@ namespace Server
         public const int SOMAXCONN = 15;
         private static Dictionary<int, (int UkupnoMjesta, int SlobodnoMjesta, decimal CijenaPoSatu)> parkingInfo = new Dictionary<int, (int, int, decimal)>();
         private static Dictionary<int, Class> zahtjevi = new Dictionary<int, Class>();
-
         static void Main(string[] args)
         {
             Console.WriteLine("Unesite broj parkinga u gradu: ");
@@ -57,7 +57,6 @@ namespace Server
             Console.WriteLine($"\nServer je pokrenut i ceka poruke na : {udpEndPoint}");
             EndPoint posiljaocaEndPoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] prijemnibuffer = new byte[BUFFER_SIZE];
-
             while (true)
             {
                 try
@@ -97,6 +96,7 @@ namespace Server
                         Class zauzece = Class.FromByteArray(zauzeceData);
                         if (parkingInfo.ContainsKey(zauzece.BrojParkinga))
                         {
+                            var parkinzi = parkingInfo[zauzece.BrojParkinga];
                             if (parkingInfo[zauzece.BrojParkinga].SlobodnoMjesta >= zauzece.BrojMjesta)
                             {
                                 // Smanjivanje broja slobodnih mjesta
@@ -129,9 +129,24 @@ namespace Server
                             }
                             else
                             {
-                                string greskaZauzeca = "Nema dovoljno slobodnih mjesta za zauzimanje.";
-                                byte[] greskaBajti = Encoding.UTF8.GetBytes(greskaZauzeca);
-                                clientSocketTcp.Send(greskaBajti);
+                                // Ako nema dovoljno slobodnih mjesta, zauzima se onoliko mjesta koliko je moguce
+                                int zauzetaMjesta = parkinzi.SlobodnoMjesta;
+                                parkingInfo[zauzece.BrojParkinga] = (
+                                    parkinzi.UkupnoMjesta,
+                                0, 
+                                    parkinzi.CijenaPoSatu
+                                );
+                                zauzece.BrojMjesta = zauzetaMjesta;
+                                Random random = new Random();
+                                int idZahtjeva = random.Next(100, 1000);
+                                zahtjevi[idZahtjeva] = zauzece;
+                                Console.WriteLine($"\nZahtjev djelimično prihvacen!\n" +
+                                                  $"Zauzima se ... Parking {zauzece.BrojParkinga}, Mjesta {zauzetaMjesta}, Sati {zauzece.BrojSati}");
+
+                                string potvrdaZauzeca = $"Zahtjev djelimično prihvaćen. Jedinstveni ID zahtjeva: {idZahtjeva}.\n " +
+                                                        $"Zauzeta mjesta: {zauzetaMjesta}. Nema više slobodnih mjesta na parkingu {zauzece.BrojParkinga}.";
+                                byte[] potvrdaBajti = Encoding.UTF8.GetBytes(potvrdaZauzeca);
+                                clientSocketTcp.Send(potvrdaBajti);
                             }
                         }
                         else
