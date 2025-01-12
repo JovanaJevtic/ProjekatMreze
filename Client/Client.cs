@@ -8,7 +8,7 @@ namespace Client
 {
     public class Client
     {
-        public const string SERVER_IP = "192.168.56.1";
+        public const string SERVER_IP = "192.168.1.5";
         public const int UDP_PORT = 50001;
         public const int TCP_PORT = 51000;
         public const int BUFFER_SIZE = 1024;
@@ -33,7 +33,6 @@ namespace Client
                     udpSocket.Close();
                     break;
                 }
-
                 try
                 {
                     int brBajta = udpSocket.SendTo(binarnaPoruka, 0, binarnaPoruka.Length, SocketFlags.None, serverAddress);
@@ -45,13 +44,11 @@ namespace Client
 
                     Console.WriteLine($"\nServer je poslao odgovor: {odgovorPoruka}");
 
-                    // Provera za neodgovarajuću poruku
                     if (odgovorPoruka.Contains("Poruka nije odgovarajuća"))
                     {
                         Console.WriteLine("Server: Poruka nije odgovarajuća. Molimo vas unesite ponovo. ");
                         continue; // Nastavlja petlju za novi unos
                     }
-
                     if (odgovorPoruka.Contains("Klijent se uspiješno prijavio!"))
                     {
                         byte[] odgovorTcpInfo = new byte[BUFFER_SIZE];
@@ -62,19 +59,15 @@ namespace Client
 
                         // Kreiraj TCP socket
                         Socket tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
                         try
                         {
                             tcpSocket.Connect(new IPEndPoint(IPAddress.Parse(SERVER_IP), TCP_PORT));
                             Console.WriteLine("Uspiješno povezivanje sa TCP serverom.");
-
                             // Primanje podataka o parkingu
                             byte[] tcpBuffer = new byte[BUFFER_SIZE];
                             int bytesReceived = tcpSocket.Receive(tcpBuffer);
                             string parkingInfo = Encoding.UTF8.GetString(tcpBuffer, 0, bytesReceived);
-
                             Console.WriteLine(parkingInfo);
-
                             int brojParkinga;
                             bool isValid;
                             do
@@ -86,7 +79,6 @@ namespace Client
                                     Console.WriteLine("Unos nije validan broj parkinga! Pokušajte ponovo.");
                                 }
                             } while (!isValid);
-
                             int brojMjesta;
                             do
                             {
@@ -97,7 +89,6 @@ namespace Client
                                     Console.WriteLine("Unos nije validan broj mjesta! Pokušajte ponovo.");
                                 }
                             } while (!isValid);
-
                             int brojSati;
                             do
                             {
@@ -108,15 +99,12 @@ namespace Client
                                     Console.WriteLine("Unos nije validan broj sati! Pokušajte ponovo.");
                                 }
                             } while (!isValid);
-
                             Class zauzece = new Class(brojParkinga, brojMjesta, brojSati);
-
                             byte[] zauzeceBytes = zauzece.ToByteArray();
                             tcpSocket.Send(zauzeceBytes);
                             byte[] odgovorZauzece = new byte[BUFFER_SIZE];
                             int bytesReceivedZauzece = tcpSocket.Receive(odgovorZauzece);
                             string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
-
                             Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
 
                             if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mjesta"))
@@ -137,7 +125,7 @@ namespace Client
 
                     else if (poruka.ToLower().StartsWith("oslobadjam:"))
                     {
-                       // Console.WriteLine("Oslobadjate parking mesto...");
+                        // Console.WriteLine("Oslobadjate parking mesto...");
                     }
 
                     else
