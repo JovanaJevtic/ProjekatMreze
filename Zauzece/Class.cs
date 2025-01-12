@@ -11,11 +11,20 @@ namespace Zauzece
         public int BrojMjesta { get; set; }
         public int BrojSati { get; set; }
 
-        public Class(int brojParkinga, int brojMjesta, int brojSati)
+        public string Proizvodjac {  get; set; }
+        public string Model {  get; set; }
+        public string Boja { get; set; }
+        public string RegistarskiBroj { get; set; }
+
+        public Class(int brojParkinga, int brojMjesta, int brojSati, string proizvodjac, string model, string boja, string registarskiBroj)
         {
             BrojParkinga = brojParkinga;
             BrojMjesta = brojMjesta;
             BrojSati = brojSati;
+            Proizvodjac = proizvodjac;
+            Model = model;
+            Boja = boja;
+            RegistarskiBroj = registarskiBroj;
         }
 
         public byte[] ToByteArray()

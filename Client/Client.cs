@@ -8,10 +8,10 @@ namespace Client
 {
     public class Client
     {
-        public const string SERVER_IP = "192.168.1.5";
+        public const string SERVER_IP = "192.168.56.1";
         public const int UDP_PORT = 50001;
         public const int TCP_PORT = 51000;
-        public const int BUFFER_SIZE = 1024;
+        public const int BUFFER_SIZE = 2000;
 
         static void Main(string[] args)
         {
@@ -33,6 +33,7 @@ namespace Client
                     udpSocket.Close();
                     break;
                 }
+
                 try
                 {
                     int brBajta = udpSocket.SendTo(binarnaPoruka, 0, binarnaPoruka.Length, SocketFlags.None, serverAddress);
@@ -49,25 +50,30 @@ namespace Client
                         Console.WriteLine("Server: Poruka nije odgovarajuća. Molimo vas unesite ponovo. ");
                         continue; // Nastavlja petlju za novi unos
                     }
+
                     if (odgovorPoruka.Contains("Klijent se uspiješno prijavio!"))
                     {
                         byte[] odgovorTcpInfo = new byte[BUFFER_SIZE];
                         EndPoint serverEndPointTCPInfo = new IPEndPoint(IPAddress.Any, 0);
                         int brPrijemnihBajtaTcp = udpSocket.ReceiveFrom(odgovorTcpInfo, ref serverEndPointTCPInfo);
                         string tcpInfo = Encoding.UTF8.GetString(odgovorTcpInfo, 0, brPrijemnihBajtaTcp);
+
                         Console.WriteLine($"Server je poslao TCP informacije: {tcpInfo}");
 
                         // Kreiraj TCP socket
                         Socket tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
                         try
                         {
                             tcpSocket.Connect(new IPEndPoint(IPAddress.Parse(SERVER_IP), TCP_PORT));
                             Console.WriteLine("Uspiješno povezivanje sa TCP serverom.");
+
                             // Primanje podataka o parkingu
                             byte[] tcpBuffer = new byte[BUFFER_SIZE];
                             int bytesReceived = tcpSocket.Receive(tcpBuffer);
                             string parkingInfo = Encoding.UTF8.GetString(tcpBuffer, 0, bytesReceived);
                             Console.WriteLine(parkingInfo);
+
                             int brojParkinga;
                             bool isValid;
                             do
@@ -79,6 +85,7 @@ namespace Client
                                     Console.WriteLine("Unos nije validan broj parkinga! Pokušajte ponovo.");
                                 }
                             } while (!isValid);
+
                             int brojMjesta;
                             do
                             {
@@ -89,6 +96,7 @@ namespace Client
                                     Console.WriteLine("Unos nije validan broj mjesta! Pokušajte ponovo.");
                                 }
                             } while (!isValid);
+
                             int brojSati;
                             do
                             {
@@ -99,12 +107,42 @@ namespace Client
                                     Console.WriteLine("Unos nije validan broj sati! Pokušajte ponovo.");
                                 }
                             } while (!isValid);
-                            Class zauzece = new Class(brojParkinga, brojMjesta, brojSati);
+
+                            string proizvodjac = " ";
+                            string model = " ";
+                            string boja = " ";
+                            string regBroj = " ";
+
+
+                            if (brojMjesta == 1)
+                            {
+                                Console.WriteLine("\nDa li zelite da unesete informacije o svom automobilu? (da/ne)");
+                                string odgovorInfo = Console.ReadLine()?.Trim();
+
+                                if (odgovorInfo.ToLower() == "da")
+                                {
+                                    Console.WriteLine("Proizvodjac: ");
+                                    proizvodjac = Console.ReadLine()?.Trim();
+
+                                    Console.WriteLine("Model: ");
+                                    model = Console.ReadLine()?.Trim();
+
+                                    Console.WriteLine("Boja: ");
+                                    boja = Console.ReadLine()?.Trim();
+
+                                    Console.WriteLine("Registarski broj: ");
+                                    regBroj = Console.ReadLine()?.Trim();
+                                }
+                            }
+
+                            Class zauzece = new Class(brojParkinga, brojMjesta, brojSati, proizvodjac, model, boja, regBroj);
+
                             byte[] zauzeceBytes = zauzece.ToByteArray();
                             tcpSocket.Send(zauzeceBytes);
                             byte[] odgovorZauzece = new byte[BUFFER_SIZE];
                             int bytesReceivedZauzece = tcpSocket.Receive(odgovorZauzece);
                             string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
+
                             Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
 
                             if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mjesta"))
