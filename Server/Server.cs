@@ -95,7 +95,7 @@ namespace Server
                         Console.WriteLine($"TCP konekcija uspostavljena sa {clientSocketTcp.RemoteEndPoint}");
 
 
-                        string parkingInfoMessage = "\n------INFORMACIJE O PARKINGU:------\n";
+                        string parkingInfoMessage = "\n------ INFORMACIJE O PARKINGU: ------\n";
                         foreach (var parking in parkingInfo)
                         {
                             parkingInfoMessage += $"\n\t----Parking {parking.Key}:----\n \t{parking.Value.SlobodnoMjesta}/{parking.Value.UkupnoMjesta} slobodnih mjesta,\n \tCijena: {parking.Value.CijenaPoSatu:C} po satu\n";
@@ -139,7 +139,7 @@ namespace Server
                                 // Ispis stanja parkinga nakon zauzimanja
                                 Console.WriteLine("\nStanje parkinga nakon zauzimanja:");
 
-                                parkingInfoMessage = "------INFORMACIJE O PARKINGU:------\n";
+                                parkingInfoMessage = "------ INFORMACIJE O PARKINGU: ------\n";
                                 foreach (var parking in parkingInfo)
                                 {
                                     parkingInfoMessage += $"\n\t----Parking {parking.Key}:----\n \t{parking.Value.SlobodnoMjesta}/{parking.Value.UkupnoMjesta} slobodnih mjesta,\n \tCijena: {parking.Value.CijenaPoSatu:C} po satu\n";
@@ -183,6 +183,7 @@ namespace Server
                         clientSocketTcp.Close();
                         listenSocketTcp.Close();
                     }
+
                     else if (poruka.ToLower().Contains("oslobadjam:"))
                     {
                         int zahtevId = int.Parse(poruka.Split(':')[1].Trim());
@@ -209,11 +210,13 @@ namespace Server
                             udpSocket.SendTo(odgovorZahteva, posiljaocaEndPoint);
                         }
                     }
+
                     else if (poruka?.ToLower() == "izlaz")
                     {
                         udpSocket.Close();
                         break;
                     }
+
                     else
                     {
                         // Pogresan unos

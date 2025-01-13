@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,6 +13,8 @@ namespace Client
         public const int UDP_PORT = 50001;
         public const int TCP_PORT = 51000;
         public const int BUFFER_SIZE = 2000;
+
+        private static Dictionary<int, int> statistikaParkinga = new Dictionary<int, int>();
 
         static void Main(string[] args)
         {
@@ -149,6 +152,31 @@ namespace Client
                             {
                                 return;
                             }
+
+
+                            //statistika
+                            if (statistikaParkinga.ContainsKey(brojParkinga))
+                            {
+                                statistikaParkinga[brojParkinga] += brojMjesta;
+                            }
+                            else
+                            {
+                                statistikaParkinga[brojParkinga] = brojMjesta;
+                            }
+
+                            
+                            string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
+                            foreach (var stat in statistikaParkinga)
+                            {
+                                statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
+                            }
+
+                            Console.WriteLine(statistikaInfo);
+
+                            // Slanje statistike serveru - nije zavrseno
+                            byte[] data = Encoding.UTF8.GetBytes(statistikaInfo);
+                            tcpSocket.Send(data);
+
                         }
                         catch (Exception ex)
                         {
