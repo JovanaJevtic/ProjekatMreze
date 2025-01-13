@@ -10,12 +10,10 @@ namespace Zauzece
         public int BrojParkinga { get; set; }
         public int BrojMjesta { get; set; }
         public int BrojSati { get; set; }
-
-        public string Proizvodjac {  get; set; }
-        public string Model {  get; set; }
+        public string Proizvodjac { get; set; }
+        public string Model { get; set; }
         public string Boja { get; set; }
         public string RegistarskiBroj { get; set; }
-
         public Class(int brojParkinga, int brojMjesta, int brojSati, string proizvodjac, string model, string boja, string registarskiBroj)
         {
             BrojParkinga = brojParkinga;
@@ -26,7 +24,6 @@ namespace Zauzece
             Boja = boja;
             RegistarskiBroj = registarskiBroj;
         }
-
         public byte[] ToByteArray()
         {
             using (MemoryStream ms = new MemoryStream())
@@ -44,6 +41,5 @@ namespace Zauzece
                 return (Class)formatter.Deserialize(ms);
             }
         }
-
     }
 }
