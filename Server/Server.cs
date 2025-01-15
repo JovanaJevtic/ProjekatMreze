@@ -13,8 +13,12 @@ namespace Server
         public const int TCP_PORT = 51000;
         public const int BUFFER_SIZE = 2000;
         public const int SOMAXCONN = 15;
+
+        private static int zahtevID = 1000;
+
         private static Dictionary<int, (int UkupnoMjesta, int SlobodnoMjesta, decimal CijenaPoSatu)> parkingInfo = new Dictionary<int, (int, int, decimal)>();
         private static Dictionary<int, Class> zahtjevi = new Dictionary<int, Class>();
+
         static void Main(string[] args)
         {
             Console.WriteLine("Unesite broj parkinga u gradu: ");
@@ -50,15 +54,17 @@ namespace Server
                 }
                 parkingInfo[i] = (ukupnoMjesta, slobodnoMjesta, cijenaPoSatu);
             }
+
             Socket udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             IPEndPoint udpEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT); // UDP server port
             udpSocket.Bind(udpEndPoint);
             Console.WriteLine($"\nServer je pokrenut i ceka poruke na : {udpEndPoint}");
             EndPoint posiljaocaEndPoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] prijemnibuffer = new byte[BUFFER_SIZE];
-            while (true)
+
+            try
             {
-                try
+                while (true)
                 {
                     int brojBajta = udpSocket.ReceiveFrom(prijemnibuffer, ref posiljaocaEndPoint);
                     string poruka = Encoding.UTF8.GetString(prijemnibuffer, 0, brojBajta);
@@ -94,8 +100,10 @@ namespace Server
                         Console.WriteLine("Informacije o parkingu poslate klijentu.");
                         byte[] zauzeceData = new byte[BUFFER_SIZE];
                         int bytesReceived = clientSocketTcp.Receive(zauzeceData);
+
                         // Deserijalizacija objekta
                         Class zauzece = Class.FromByteArray(zauzeceData);
+
                         if (parkingInfo.ContainsKey(zauzece.BrojParkinga))
                         {
                             var parkinzi = parkingInfo[zauzece.BrojParkinga];
@@ -106,15 +114,17 @@ namespace Server
                                     parkingInfo[zauzece.BrojParkinga].SlobodnoMjesta - zauzece.BrojMjesta,
                                     parkingInfo[zauzece.BrojParkinga].CijenaPoSatu
                                 );
-                                Random random = new Random();
-                                int idZahtjeva = random.Next(100, 1000);
+
+                                int idZahtjeva = zahtevID++;
                                 zahtjevi[idZahtjeva] = zauzece;
+
 
                                 Console.WriteLine($"\nZahtev za zauzimanje prihvaćen!\n" +
                                     $"Zauzima se ... Parking {zauzece.BrojParkinga}, Mjesta {zauzece.BrojMjesta}, Sati {zauzece.BrojSati}");
                                 string potvrdaZauzeca = $"Zahtjev prihvaćen. Jedinstveni ID zahtjeva: {idZahtjeva}.";
                                 byte[] potvrdaBajti = Encoding.UTF8.GetBytes(potvrdaZauzeca);
                                 clientSocketTcp.Send(potvrdaBajti);
+
                                 // Ispis stanja parkinga nakon zauzimanja
                                 Console.WriteLine("\nStanje parkinga nakon zauzimanja:");
                                 parkingInfoMessage = "------ INFORMACIJE O PARKINGU: ------\n";
@@ -137,9 +147,10 @@ namespace Server
                                     parkinzi.CijenaPoSatu
                                 );
                                 zauzece.BrojMjesta = zauzetaMjesta;
-                                Random random = new Random();
-                                int idZahtjeva = random.Next(100, 1000);
+
+                                int idZahtjeva = zahtevID++;
                                 zahtjevi[idZahtjeva] = zauzece;
+
                                 Console.WriteLine($"\nZahtjev djelimično prihvacen!\n" +
                                                   $"Zauzima se ... Parking {zauzece.BrojParkinga}, Mjesta {zauzetaMjesta}, Sati {zauzece.BrojSati}");
                                 string potvrdaZauzeca = $"Zahtjev djelimično prihvaćen. Jedinstveni ID zahtjeva: {idZahtjeva}.\n " +
@@ -148,6 +159,7 @@ namespace Server
                                 clientSocketTcp.Send(potvrdaBajti);
                             }
                         }
+
                         else
                         {
                             string pomocni = "Parking sa tim brojem ne postoji.";
@@ -157,6 +169,7 @@ namespace Server
                         clientSocketTcp.Close();
                         listenSocketTcp.Close();
                     }
+
                     else if (poruka.ToLower().Contains("oslobadjam:"))
                     {
                         int zahtevId = int.Parse(poruka.Split(':')[1].Trim());
@@ -201,10 +214,10 @@ namespace Server
                         udpSocket.SendTo(greskaBajti, posiljaocaEndPoint);
                     }
                 }
-                catch (SocketException ex)
-                {
-                    Console.WriteLine($"Došlo je do greške prilikom prijema poruke: {ex.Message}");
-                }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine($"Došlo je do greške prilikom prijema poruke: {ex.Message}");
             }
         }
     }
