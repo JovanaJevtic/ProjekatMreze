@@ -143,21 +143,25 @@ namespace Client
                                 return;
                             }
 
-                            //statistika
-                            if (statistikaParkinga.ContainsKey(brojParkinga))
+                            else if (!odgovorZauzecePoruka.Contains("Parking sa tim brojem ne postoji"))
                             {
-                                statistikaParkinga[brojParkinga] += brojMjesta;
+                                //statistika
+                                if (statistikaParkinga.ContainsKey(brojParkinga))
+                                {
+                                    statistikaParkinga[brojParkinga] += brojMjesta;
+                                }
+                                else
+                                {
+                                    statistikaParkinga[brojParkinga] = brojMjesta;
+                                }
+                                string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
+                                foreach (var stat in statistikaParkinga)
+                                {
+                                    statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
+                                }
+                                Console.WriteLine(statistikaInfo);
                             }
-                            else
-                            {
-                                statistikaParkinga[brojParkinga] = brojMjesta;
-                            }
-                            string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
-                            foreach (var stat in statistikaParkinga)
-                            {
-                                statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
-                            }
-                            Console.WriteLine(statistikaInfo);
+                            
                         }
                         catch (Exception ex)
                         {
@@ -172,7 +176,7 @@ namespace Client
 
                     else if (odgovorPoruka.Contains("Mjesto je uspiješno oslobodjeno"))
                     {
-                        Console.WriteLine("Da li želite da potvrdite račun? (Da/Ne)");
+                        Console.WriteLine("\nDa li želite da potvrdite račun? (Da/Ne)");
                         string potvrda = Console.ReadLine()?.Trim().ToLower();
                         if (potvrda == "da")
                         {
