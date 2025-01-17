@@ -47,7 +47,6 @@ namespace Client
 
                     if (odgovorPoruka.Contains("Poruka nije odgovarajuća"))
                     {
-                        Console.WriteLine("Server: Poruka nije odgovarajuća. Molimo vas unesite ponovo. ");
                         continue;
                     }
 

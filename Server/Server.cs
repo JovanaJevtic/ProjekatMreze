@@ -68,12 +68,13 @@ namespace Server
             {
                 while (true)
                 {
-                    List<Socket> checkRead = new List<Socket> { udpSocket };
-                    List<Socket> checkError = new List<Socket> { udpSocket };
-                    Socket.Select(checkRead, null, checkError, 1000);
+                    List<Socket> checkReadUDP = new List<Socket> { udpSocket };
+                    List<Socket> checkErrorUDP = new List<Socket> { udpSocket };
+                    Socket.Select(checkReadUDP, null, checkErrorUDP, 1000);
 
-                    if (checkRead.Count > 0)
+                    if (checkReadUDP.Count > 0)
                     {
+                        //Console.WriteLine($"\n- Desilo se {checkReadUDP.Count} dogadjaja\n");
 
                         int brojBajta = udpSocket.ReceiveFrom(prijemnibuffer, ref posiljaocaEndPoint);
                         string poruka = Encoding.UTF8.GetString(prijemnibuffer, 0, brojBajta);
@@ -181,39 +182,53 @@ namespace Server
 
                         else if (poruka.ToLower().Contains("oslobadjam:"))
                         {
-                            int zahtevId = int.Parse(poruka.Split(':')[1].Trim());
-                            if (zahtjevi.ContainsKey(zahtevId))
+                            if (int.TryParse(poruka.Split(':')[1].Trim(), out int zahtevId))
                             {
-                                var zauzeto = zahtjevi[zahtevId];
-                                decimal racun = zauzeto.BrojSati * zauzeto.BrojMjesta * parkingInfo[zauzeto.BrojParkinga].CijenaPoSatu;
+                                zahtevId = int.Parse(poruka.Split(':')[1].Trim());
 
-                                parkingInfo[zauzeto.BrojParkinga] = (
-                                    parkingInfo[zauzeto.BrojParkinga].UkupnoMjesta,
-                                    parkingInfo[zauzeto.BrojParkinga].SlobodnoMjesta + zauzeto.BrojMjesta,
-                                    parkingInfo[zauzeto.BrojParkinga].CijenaPoSatu
-                                );
+                                if (zahtjevi.ContainsKey(zahtevId))
+                                {
+                                    var zauzeto = zahtjevi[zahtevId];
+                                    decimal racun = zauzeto.BrojSati * zauzeto.BrojMjesta * parkingInfo[zauzeto.BrojParkinga].CijenaPoSatu;
 
-                                zahtjevi.Remove(zahtevId);
-                                string odgovor = $"Mjesto je uspiješno oslobodjeno.\n---Račun za zauzeta mjesta iznosi: {racun:C}.---\nSlobodno mjesta na parkingu {zauzeto.BrojParkinga}: {parkingInfo[zauzeto.BrojParkinga].SlobodnoMjesta}";
-                                byte[] odgovorZahteva = Encoding.UTF8.GetBytes(odgovor);
-                                udpSocket.SendTo(odgovorZahteva, posiljaocaEndPoint);
+                                    parkingInfo[zauzeto.BrojParkinga] = (
+                                        parkingInfo[zauzeto.BrojParkinga].UkupnoMjesta,
+                                        parkingInfo[zauzeto.BrojParkinga].SlobodnoMjesta + zauzeto.BrojMjesta,
+                                        parkingInfo[zauzeto.BrojParkinga].CijenaPoSatu
+                                    );
+
+                                    zahtjevi.Remove(zahtevId);
+                                    string odgovor = $"Mjesto je uspiješno oslobodjeno.\n---Račun za zauzeta mjesta iznosi: {racun:C}.---\nSlobodno mjesta na parkingu {zauzeto.BrojParkinga}: {parkingInfo[zauzeto.BrojParkinga].SlobodnoMjesta}";
+                                    byte[] odgovorZahteva = Encoding.UTF8.GetBytes(odgovor);
+                                    udpSocket.SendTo(odgovorZahteva, posiljaocaEndPoint);
+                                }
+                                else
+                                {
+                                    string odgovor = "Ne postoji zahtev sa tim brojem.";
+                                    byte[] odgovorZahteva = Encoding.UTF8.GetBytes(odgovor);
+                                    udpSocket.SendTo(odgovorZahteva, posiljaocaEndPoint);
+                                }
+
                             }
                             else
                             {
-                                string odgovor = "Ne postoji zahtev sa tim brojem.";
+                                string odgovor = "Neispravan format zahteva za oslobadjanjem.";
                                 byte[] odgovorZahteva = Encoding.UTF8.GetBytes(odgovor);
                                 udpSocket.SendTo(odgovorZahteva, posiljaocaEndPoint);
                             }
+                            
                         }
                         else if (poruka?.ToLower() == "izlaz")
                         {
                             udpSocket.Close();
                             break;
                         }
+
                         else if (poruka.ToLower() == "račun potvrdjen.")
                         {
                             Console.WriteLine("Klijent je potvrdio racun.");
                         }
+
                         else
                         {
                             // Pogresan unos
@@ -223,11 +238,12 @@ namespace Server
                             udpSocket.SendTo(greskaBajti, posiljaocaEndPoint);
                         }
                     }
-                    if (checkError.Count > 0)
-                    {
-                        Console.WriteLine($"Desilo se {checkError.Count} gresaka\n");
 
-                        foreach (Socket s in checkError)
+                    if (checkErrorUDP.Count > 0)
+                    {
+                        Console.WriteLine($"Desilo se {checkErrorUDP.Count} gresaka\n");
+
+                        foreach (Socket s in checkErrorUDP)
                         {
                             Console.WriteLine($"Greska na socketu: {s.LocalEndPoint}");
 
@@ -236,8 +252,8 @@ namespace Server
 
                         }
                     }
-                    checkError.Clear();
-                    checkRead.Clear();
+                    checkErrorUDP.Clear();
+                    checkReadUDP.Clear();
                 }
                 
             }
