@@ -56,7 +56,7 @@ namespace Server
             }
 
             Socket udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IPEndPoint udpEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT); // UDP server port
+            IPEndPoint udpEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT); 
             udpSocket.Bind(udpEndPoint);
             Console.WriteLine($"\nServer je pokrenut i ceka poruke na : {udpEndPoint}");
             EndPoint posiljaocaEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -74,8 +74,6 @@ namespace Server
 
                     if (checkReadUDP.Count > 0)
                     {
-                        //Console.WriteLine($"\n- Desilo se {checkReadUDP.Count} dogadjaja\n");
-
                         int brojBajta = udpSocket.ReceiveFrom(prijemnibuffer, ref posiljaocaEndPoint);
                         string poruka = Encoding.UTF8.GetString(prijemnibuffer, 0, brojBajta);
                         Console.WriteLine($"\nStigla je poruka od {posiljaocaEndPoint} : {poruka}");
@@ -146,6 +144,16 @@ namespace Server
 
                                     byte[] updatedParkingInfo = Encoding.UTF8.GetBytes(parkingInfoMessage);
                                     clientSocketTcp.Send(updatedParkingInfo);
+                                }
+                                else if (parkinzi.SlobodnoMjesta == 0)
+                                {
+                                    Console.WriteLine($"\nNema slobodnih mjesta na parkingu {zauzece.BrojParkinga}. Zauzimanje nije moguće.");
+                                    string porukaNemaMjesta = $"Nema slobodnih mjesta na parkingu {zauzece.BrojParkinga}. Nije moguće zauzeti mjesto. Navratite kasnije.";
+                                    byte[] porukaBajti = Encoding.UTF8.GetBytes(porukaNemaMjesta);
+                                    clientSocketTcp.Send(porukaBajti);
+                                    clientSocketTcp.Close();
+                                    listenSocketTcp.Close();
+                                    continue; 
                                 }
                                 else
                                 {

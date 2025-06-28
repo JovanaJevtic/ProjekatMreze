@@ -9,7 +9,7 @@ namespace Client
 {
     public class Client
     {
-        public const string SERVER_IP = "192.168.56.1";
+        public const string SERVER_IP = "192.168.1.5";
         public const int UDP_PORT = 50001;
         public const int TCP_PORT = 51000;
         public const int BUFFER_SIZE = 2000;
@@ -137,30 +137,31 @@ namespace Client
                             string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
                             Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
 
-                            if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mjesta"))
+                            if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mjesta") ||
+                               odgovorZauzecePoruka.Contains("Nije moguće zauzeti mjesto") ||
+                               odgovorZauzecePoruka.Contains("Zauzeta mjesta: 0"))
                             {
-                                return;
+                                continue;
                             }
 
-                            else if (!odgovorZauzecePoruka.Contains("Parking sa tim brojem ne postoji"))
-                            {
-                                //statistika
-                                if (statistikaParkinga.ContainsKey(brojParkinga))
-                                {
-                                    statistikaParkinga[brojParkinga] += brojMjesta;
-                                }
-                                else
-                                {
-                                    statistikaParkinga[brojParkinga] = brojMjesta;
-                                }
-                                string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
-                                foreach (var stat in statistikaParkinga)
-                                {
-                                    statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
-                                }
-                                Console.WriteLine(statistikaInfo);
-                            }
-                            
+                            if (!odgovorZauzecePoruka.Contains("Parking sa tim brojem ne postoji"))
+                             {
+                                 //statistika
+                                 if (statistikaParkinga.ContainsKey(brojParkinga))
+                                 {
+                                     statistikaParkinga[brojParkinga] += brojMjesta;
+                                 }
+                                 else
+                                 {
+                                     statistikaParkinga[brojParkinga] = brojMjesta;
+                                 }
+                                 string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
+                                 foreach (var stat in statistikaParkinga)
+                                 {
+                                     statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
+                                 }
+                                 Console.WriteLine(statistikaInfo);
+                             }
                         }
                         catch (Exception ex)
                         {
