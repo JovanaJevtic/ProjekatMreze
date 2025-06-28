@@ -56,7 +56,7 @@ namespace Server
             }
 
             Socket udpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IPEndPoint udpEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT); 
+            IPEndPoint udpEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT);
             udpSocket.Bind(udpEndPoint);
             Console.WriteLine($"\nServer je pokrenut i ceka poruke na : {udpEndPoint}");
             EndPoint posiljaocaEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -133,6 +133,10 @@ namespace Server
                                     byte[] potvrdaBajti = Encoding.UTF8.GetBytes(potvrdaZauzeca);
                                     clientSocketTcp.Send(potvrdaBajti);
 
+                                    //  šaljemo stvaran broj zauzetih mjesta
+                                    byte[] stvarniBrojMjesta = BitConverter.GetBytes(zauzece.BrojMjesta);
+                                    clientSocketTcp.Send(stvarniBrojMjesta);
+
                                     // Ispis stanja parkinga nakon zauzimanja
                                     Console.WriteLine("\nStanje parkinga nakon zauzimanja:");
                                     parkingInfoMessage = "------ INFORMACIJE O PARKINGU: ------\n";
@@ -153,7 +157,7 @@ namespace Server
                                     clientSocketTcp.Send(porukaBajti);
                                     clientSocketTcp.Close();
                                     listenSocketTcp.Close();
-                                    continue; 
+                                    continue;
                                 }
                                 else
                                 {
@@ -175,9 +179,12 @@ namespace Server
                                                             $"Zauzeta mjesta: {zauzetaMjesta}. Nema više slobodnih mjesta na parkingu {zauzece.BrojParkinga}.";
                                     byte[] potvrdaBajti = Encoding.UTF8.GetBytes(potvrdaZauzeca);
                                     clientSocketTcp.Send(potvrdaBajti);
+
+                                    //saljemo stvaran broj zauzetih mjesta 
+                                    byte[] stvarniBrojMjesta = BitConverter.GetBytes(zauzetaMjesta);
+                                    clientSocketTcp.Send(stvarniBrojMjesta);
                                 }
                             }
-
                             else
                             {
                                 string pomocni = "Parking sa tim brojem ne postoji.";
@@ -224,7 +231,7 @@ namespace Server
                                 byte[] odgovorZahteva = Encoding.UTF8.GetBytes(odgovor);
                                 udpSocket.SendTo(odgovorZahteva, posiljaocaEndPoint);
                             }
-                            
+
                         }
                         else if (poruka?.ToLower() == "izlaz")
                         {
@@ -263,7 +270,7 @@ namespace Server
                     checkErrorUDP.Clear();
                     checkReadUDP.Clear();
                 }
-                
+
             }
             catch (SocketException ex)
             {

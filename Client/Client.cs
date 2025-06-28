@@ -132,10 +132,12 @@ namespace Client
                             Class zauzece = new Class(brojParkinga, brojMjesta, brojSati, proizvodjac, model, boja, regBroj);
                             byte[] zauzeceBytes = zauzece.ToByteArray();
                             tcpSocket.Send(zauzeceBytes);
+
                             byte[] odgovorZauzece = new byte[BUFFER_SIZE];
                             int bytesReceivedZauzece = tcpSocket.Receive(odgovorZauzece);
                             string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
                             Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
+
 
                             if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mjesta") ||
                                odgovorZauzecePoruka.Contains("Nije moguće zauzeti mjesto") ||
@@ -144,24 +146,29 @@ namespace Client
                                 continue;
                             }
 
+                            //  PRIMAMO STVARNI BROJ MIJESTA KOJI SU ZAUZETI
+                            byte[] stvarniBrojBytes = new byte[4];
+                            int primljeno = tcpSocket.Receive(stvarniBrojBytes);
+                            int stvarnoZauzeto = BitConverter.ToInt32(stvarniBrojBytes, 0);
+
                             if (!odgovorZauzecePoruka.Contains("Parking sa tim brojem ne postoji"))
-                             {
-                                 //statistika
-                                 if (statistikaParkinga.ContainsKey(brojParkinga))
-                                 {
-                                     statistikaParkinga[brojParkinga] += brojMjesta;
-                                 }
-                                 else
-                                 {
-                                     statistikaParkinga[brojParkinga] = brojMjesta;
-                                 }
-                                 string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
-                                 foreach (var stat in statistikaParkinga)
-                                 {
-                                     statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
-                                 }
-                                 Console.WriteLine(statistikaInfo);
-                             }
+                            {
+                                //statistika
+                                if (statistikaParkinga.ContainsKey(brojParkinga))
+                                {
+                                    statistikaParkinga[brojParkinga] += stvarnoZauzeto;
+                                }
+                                else
+                                {
+                                    statistikaParkinga[brojParkinga] = stvarnoZauzeto;
+                                }
+                                string statistikaInfo = "\n------ STATISTIKA O PARKINGU: ------";
+                                foreach (var stat in statistikaParkinga)
+                                {
+                                    statistikaInfo += $"\n\tParking {stat.Key}: {stat.Value} vozila.";
+                                }
+                                Console.WriteLine(statistikaInfo);
+                            }
                         }
                         catch (Exception ex)
                         {
