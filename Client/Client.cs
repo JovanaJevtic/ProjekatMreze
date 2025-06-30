@@ -33,7 +33,6 @@ namespace Client
                     udpSocket.Close();
                     break;
                 }
-
                 try
                 {
                     int brBajta = udpSocket.SendTo(binarnaPoruka, 0, binarnaPoruka.Length, SocketFlags.None, serverAddress);
@@ -128,7 +127,6 @@ namespace Client
                                     regBroj = Console.ReadLine()?.Trim();
                                 }
                             }
-
                             Class zauzece = new Class(brojParkinga, brojMjesta, brojSati, proizvodjac, model, boja, regBroj);
                             byte[] zauzeceBytes = zauzece.ToByteArray();
                             tcpSocket.Send(zauzeceBytes);
@@ -138,14 +136,12 @@ namespace Client
                             string odgovorZauzecePoruka = Encoding.UTF8.GetString(odgovorZauzece, 0, bytesReceivedZauzece);
                             Console.WriteLine($"Server je poslao odgovor: {odgovorZauzecePoruka}");
 
-
                             if (odgovorZauzecePoruka.Contains("Nema dovoljno slobodnih mjesta") ||
                                odgovorZauzecePoruka.Contains("Nije moguće zauzeti mjesto") ||
                                odgovorZauzecePoruka.Contains("Zauzeta mjesta: 0"))
                             {
                                 continue;
                             }
-
                             //  PRIMAMO STVARNI BROJ MIJESTA KOJI SU ZAUZETI
                             byte[] stvarniBrojBytes = new byte[4];
                             int primljeno = tcpSocket.Receive(stvarniBrojBytes);
