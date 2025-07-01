@@ -149,7 +149,6 @@ namespace Server
                         }
                         else
                         {
-                            // Pogresan unos
                             string greskaPoruka = "Poruka nije odgovarajuća. Pokušajte ponovo.";
                             Console.WriteLine($"- Nepoznata komanda od {posiljaocaEndPoint} : {poruka}");
                             byte[] greskaBajti = Encoding.UTF8.GetBytes(greskaPoruka);
@@ -179,6 +178,8 @@ namespace Server
                     foreach (Socket clientSocketTcp in checkReadTCP)
                     {
                         if (clientSocketTcp == listenSocketTcp)
+                        // da li je socket koji je spreman za citanje zapravo listensockettcp
+                        //ako jeste to znaci da novi klijent pokusava da se poveze
                         {
                             try
                             {
@@ -253,7 +254,6 @@ namespace Server
                                             }
                                             Console.WriteLine(parkingInfoMessage);
 
-                                            //?
                                             byte[] updatedParkingInfo = Encoding.UTF8.GetBytes(parkingInfoMessage);
                                             clientSocketTcp.Send(updatedParkingInfo);
                                         }
@@ -264,8 +264,6 @@ namespace Server
                                             string porukaNemaMjesta = $"Nema slobodnih mjesta na parkingu {zauzece.BrojParkinga}. Nije moguće zauzeti mjesto. Navratite kasnije.";
                                             byte[] porukaBajti = Encoding.UTF8.GetBytes(porukaNemaMjesta);
                                             clientSocketTcp.Send(porukaBajti);
-                                            //  clientSocketTcp.Close();
-                                            // listenSocketTcp.Close();
                                             continue;
                                         }
                                         else
@@ -292,6 +290,15 @@ namespace Server
                                             //saljemo stvaran broj zauzetih mjesta 
                                             byte[] stvarniBrojMjesta = BitConverter.GetBytes(zauzetaMjesta);
                                             clientSocketTcp.Send(stvarniBrojMjesta);
+
+                                            // Dodajemo slanje ažuriranih informacija o parkingu
+                                            string parkingInfoMessage = "------ INFORMACIJE O PARKINGU: ------\n";
+                                            foreach (var parking in parkingInfo)
+                                            {
+                                                parkingInfoMessage += $"\n\t----Parking {parking.Key}:----\n \t{parking.Value.SlobodnoMjesta}/{parking.Value.UkupnoMjesta} slobodnih mjesta,\n \tCijena: {parking.Value.CijenaPoSatu:C} po satu\n";
+                                            }
+                                            byte[] updatedParkingInfo = Encoding.UTF8.GetBytes(parkingInfoMessage);
+                                            clientSocketTcp.Send(updatedParkingInfo);
                                         }
                                     }
                                     else
